@@ -223,4 +223,36 @@ describe("Qatar2022MetaverseWorldCup", function () {
       ).to.be.revertedWith("Ownable: caller is not the owner")
     })
   })
+
+  describe("Income", () => {
+    before(async function() {
+      [owner, treasury, user1, user2] = await ethers.getSigners()
+
+      Qatar2022MetaverseWorldCup = await ethers.getContractFactory("Qatar2022MetaverseWorldCup")
+      qatar2022Meta = await Qatar2022MetaverseWorldCup.deploy(0, treasury.address)
+      await qatar2022Meta.deployed()
+    })
+    
+    it("should be withdrawn to the treasury", async () => {
+      await qatar2022Meta.connect(user1).mint(
+        3,
+        {
+          value: newMintPrice.mul(3)
+        }
+      )
+
+      await qatar2022Meta.connect(user2).mint(
+        5,
+        {
+          value: newMintPrice.mul(5)
+        }
+      )
+
+      treasuryOldBalance = await ethers.provider.getBalance(treasury.address)
+      await qatar2022Meta.withdraw()
+      treasuryNewBalance = await ethers.provider.getBalance(treasury.address)
+
+      expect(treasuryNewBalance.sub(treasuryOldBalance)).to.equal(ethers.utils.parseEther("800"))
+    })
+  })
 })

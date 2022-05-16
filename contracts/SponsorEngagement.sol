@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SponsorEngagement is Ownable {
     struct Sponsor{
+        address sponsor;
         string logoUrl;
         uint256 jerseys;
         uint256 created;
@@ -24,7 +25,7 @@ contract SponsorEngagement is Ownable {
     uint256 public sponsorFeePerJersey = 10 ether;
 
     /// @dev Fixed Sponsor means: showing ads in all NFT
-    uint256 public sponsorFixedFee = 1000 ether;
+    uint256 public sponsorFixedFee = 2000 ether;
 
     uint256 public constant MAX_NFTS = 9900;
 
@@ -38,10 +39,10 @@ contract SponsorEngagement is Ownable {
     }
 
     function engage(string memory logoUrl, uint256 jerseys, bool isFixed) external payable {
-        require(bytes(logoUrl).length > 0, "Invalid logo");
+        require(bytes(logoUrl).length > 0 && bytes(logoUrl).length < 1024, "Invalid logo");
         require(
             (isFixed && msg.value >= sponsorFixedFee) || 
-            (!isFixed && msg.value > sponsorFeePerJersey * jerseys), 
+            (!isFixed && msg.value >= sponsorFeePerJersey * jerseys), 
             "Not enough fee"
         );
 
@@ -50,8 +51,9 @@ contract SponsorEngagement is Ownable {
         }
 
         sponsors.push(Sponsor({
+            sponsor: msg.sender,
             logoUrl: logoUrl,
-            jerseys: jerseys,
+            jerseys: isFixed ? 0 : jerseys,
             created: block.timestamp,
             isFixed: isFixed
         }));

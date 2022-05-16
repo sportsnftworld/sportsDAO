@@ -6,7 +6,7 @@ It is conceptual repository of brand new `SportsDAO`, firstly introduced to the 
 
 ## Elements of SportsDAO
 
-- Governance NFT Token
+- Governance NFT
 - Treasury
 - Staking
 - Incomes Sources(like Betting, SponsorEngagement)
