@@ -10,6 +10,9 @@ contract TeamFunds {
     /// @dev total amount of funds, assigned to team members
     uint256 public totalAmountOfTeam;
 
+    /// @dev total left amount of funds, for team members
+    uint256 public leftAmountOfTeam;
+
     /// @dev number of team members
     uint256 public totalMembersCount;
 
@@ -36,6 +39,8 @@ contract TeamFunds {
         require(_amount > 0, "Invalid amount");
 
         totalAmountOfTeam += _amount;
+
+        leftAmountOfTeam += _amount;
     }
 
     /// @dev Check address validity, and transfer equity of income to wallet
@@ -49,6 +54,8 @@ contract TeamFunds {
         require(totalAmount - member.withdrawn >= _amount, "Too many amount");
 
         member.withdrawn += _amount;
+        leftAmountOfTeam -= _amount;
+
         payable(msg.sender).transfer(_amount);
     }
 }
