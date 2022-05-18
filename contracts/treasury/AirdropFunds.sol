@@ -25,18 +25,18 @@ contract AirdropFunds {
     uint256 public totalAirdropCount;
 
     /// @dev Sum of {percentage} of all airdrop objects
-    uint256 public totalPercentages;
+    uint256 public totalAirdropPercentages;
 
     /// @dev Sum of {percentage} of all registered airdrop objects
-    uint256 public registeredPercentages;
+    uint256 public registeredAirdropPercentages;
 
     ERC721AirdropObject[] public airdrops;
 
-    function initiailizeAirdrop(uint256 _maxAmount, uint256 _totalPercentages) internal {
-        require(_maxAmount > 0 && _totalPercentages < 100, "Invalid airdrop conf");
+    function _initiailizeAirdrop(uint256 _maxAmount, uint256 _totalAirdropPercentages) internal {
+        require(_maxAmount > 0 && _totalAirdropPercentages < 100, "Invalid airdrop conf");
 
         maximumAmountOfAirdrop = _maxAmount;
-        totalPercentages = _totalPercentages;
+        totalAirdropPercentages = _totalAirdropPercentages;
     }
 
     function _registerAirdropObject(address _collection, uint256 _tokenId, uint256 _percentage) internal {
@@ -59,8 +59,8 @@ contract AirdropFunds {
 
         totalAirdropCount ++;
 
-        registeredPercentages += _percentage;
-        require(registeredPercentages <= totalPercentages, "Invalid percentage");
+        registeredAirdropPercentages += _percentage;
+        require(registeredAirdropPercentages <= totalAirdropPercentages, "Invalid percentage");
     }
 
     /// @dev whenever deposit funds to airdrop, total amount should not exceed the maximum limit
@@ -88,7 +88,7 @@ contract AirdropFunds {
 
         require(collection.ownerOf(airdrop.tokenId) == msg.sender, "Invalid owner");
 
-        uint256 _amount = totalAmountOfAirdrop *  airdrop.percentage / totalPercentages;
+        uint256 _amount = totalAmountOfAirdrop *  airdrop.percentage / totalAirdropPercentages;
         require(_amount > airdrop.withdrawn, "Already withdrawn");
 
         uint256 _withdrawAmount = _amount - airdrop.withdrawn;

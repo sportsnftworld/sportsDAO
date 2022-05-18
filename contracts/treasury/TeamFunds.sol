@@ -19,7 +19,8 @@ contract TeamFunds {
     /// @dev Sum of {equity} of all members
     uint256 public totalEquities;
 
-    mapping(address => TeamMember) public team;
+    /// @dev Keep team as internal, hide to others
+    mapping(address => TeamMember) internal team;
 
     /// @dev It should be called only in the constructor, to avoid wrong calculation result
     function _registerTeamMember(address _member, uint256 _equity) internal {
@@ -57,5 +58,12 @@ contract TeamFunds {
         leftAmountOfTeam -= _amount;
 
         payable(msg.sender).transfer(_amount);
+    }
+
+    function queryTeamInfo() external view returns (uint256 equity, uint256 withdrawn) {
+        TeamMember storage member = team[msg.sender];
+
+        equity = member.equity;
+        withdrawn = member.withdrawn;
     }
 }

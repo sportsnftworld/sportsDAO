@@ -17,7 +17,7 @@ contract StakingRewardsFunds {
 
     StakingRewardsAgreement[] public stakingRewardsHistory;
 
-    function initializeStakingRewards(address _staking) internal {
+    function _initializeStakingRewards(address _staking) internal {
         require(_staking != address(0), "Invalid staking");
         staking = IStaking(_staking);
     }
