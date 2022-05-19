@@ -81,6 +81,7 @@ contract SponsorEngagement is Ownable {
     }
 
     function withdraw() external onlyOwner {
-        payable(TREASURY).transfer(address(this).balance);
+        (bool success, ) = TREASURY.call{value: address(this).balance}("");
+        require(success, "Unable to withdraw");
     }
 }

@@ -27,6 +27,7 @@ describe("Treasury", function() {
             [member1.address, member2.address, member3.address],
             [20, 20, 10]
         )
+        sponsor = await SponsorEngagement.deploy(treasury.address)
     })
 
     describe("Deployment", () => {
@@ -37,6 +38,18 @@ describe("Treasury", function() {
             expect(await treasury.staking()).to.equal(staking.address)
             expect(await treasury.totalMembersCount()).to.equal(3)
             expect(await treasury.totalEquities()).to.equal(50)
+            expect(await sponsor.TREASURY()).to.equal(treasury.address)
+
+            member1Info = await treasury.connect(member1).queryTeamInfo()
+            member2Info = await treasury.connect(member2).queryTeamInfo()
+            member3Info = await treasury.connect(member3).queryTeamInfo()
+            expect(member1Info[0]).to.equal(ethers.BigNumber.from(20))
+            expect(member2Info[0]).to.equal(ethers.BigNumber.from(20))
+            expect(member3Info[0]).to.equal(ethers.BigNumber.from(10))
+
+            expect(member1Info[1]).to.equal(0)
+            expect(member2Info[1]).to.equal(0)
+            expect(member3Info[1]).to.equal(0)
         })
     })
 
@@ -88,5 +101,74 @@ describe("Treasury", function() {
                 ethers.utils.parseEther("2300")
             )
         })
+    })
+
+    describe("SponsorEngagement", () => {
+        it("Fee should be withdrawn to treasury", async () => {
+            await sponsor.connect(user1).engage(
+                "https://example.com/logo-1.png",
+                3,
+                false,
+                {
+                    value: ethers.utils.parseEther("10").mul(3)
+                }
+            )
+            await sponsor.connect(user2).engage(
+                "https://example.com/logo-2.png",
+                100,
+                false,
+                {
+                    value: ethers.utils.parseEther("10").mul(100)
+                }
+            )
+            await sponsor.connect(user3).engage(
+                "https://example.com/logo-3.png",
+                0,
+                true,
+                {
+                    value: ethers.utils.parseEther("2000")
+                }
+            )
+
+            expect(await ethers.provider.getBalance(sponsor.address)).to.equal(ethers.utils.parseEther("3030"))
+            await sponsor.withdraw()
+            expect(await ethers.provider.getBalance(sponsor.address)).to.equal(0)
+
+            expect(await ethers.provider.getBalance(treasury.address)).to.equal(
+                ethers.utils.parseEther("5330")
+            )
+        })
+    })
+
+    describe("Team member", () => {
+        it("Should be able to withdraw equity", async () => {
+            expect(await treasury.totalAmountOfTeam()).to.equal(ethers.utils.parseEther("2665"))
+            expect(await treasury.leftAmountOfTeam()).to.equal(ethers.utils.parseEther("2665"))
+
+            await expect(treasury.withdraw(ethers.utils.parseEther("700"))).to.be.revertedWith("Invalid address")
+
+            await treasury.connect(member1).withdraw(ethers.utils.parseEther("700"))
+            await expect(treasury.connect(member1).withdraw(ethers.utils.parseEther("367"))).to.be.revertedWith("Too many amount")
+            await treasury.connect(member1).withdraw(ethers.utils.parseEther("366"))
+            await expect(treasury.connect(member1).withdraw(ethers.utils.parseEther("1"))).to.be.revertedWith("Too many amount")
+
+            expect(await treasury.totalAmountOfTeam()).to.equal(ethers.utils.parseEther("2665"))
+            expect(await treasury.leftAmountOfTeam()).to.equal(ethers.utils.parseEther("1599"))
+
+            member1Info = await treasury.connect(member1).queryTeamInfo()
+            expect(member1Info[0]).to.equal(ethers.BigNumber.from(20))
+            expect(member1Info[1]).to.equal(ethers.utils.parseEther("1066"))
+
+            await treasury.connect(member2).withdraw(ethers.utils.parseEther("300"))
+            member2Info = await treasury.connect(member2).queryTeamInfo()
+            expect(member2Info[0]).to.equal(ethers.BigNumber.from(20))
+            expect(member2Info[1]).to.equal(ethers.utils.parseEther("300"))
+
+            expect(await treasury.leftAmountOfTeam()).to.equal(ethers.utils.parseEther("1299"))
+        })
+    })
+
+    describe("Airdrop", () => {
+        
     })
 })
