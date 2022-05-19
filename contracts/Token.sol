@@ -112,6 +112,7 @@ contract Qatar2022MetaverseWorldCup is Ownable, ERC721Enumerable {
     }
 
     function withdraw() external onlyOwner {
-        payable(TREASURY).transfer(address(this).balance);
+        (bool success, ) = TREASURY.call{value: address(this).balance}("");
+        require(success, "Unable to withdraw");
     }
 }

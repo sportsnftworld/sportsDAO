@@ -33,6 +33,13 @@ contract StakingRewardsFunds {
 
         // transfer value to staking contract
         staking.distributeRewards{value: _actualAmount}();
+
+        stakingRewardsHistory.push(
+            StakingRewardsAgreement({
+                amount: _actualAmount,
+                distributedAt: block.timestamp
+            })
+        );
     }
 
     function _depositToStakingRewards(uint256 _amount) internal {
