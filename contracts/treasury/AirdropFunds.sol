@@ -81,7 +81,7 @@ contract AirdropFunds {
     /// @dev Check valid token holders, and transfer airdrop amount
     function withdrawAirdrop(uint256 airdropId) external {
         require(totalAmountOfAirdrop > 0, "No fund yet");
-        require(airdropId >= 0 && airdropId < totalAirdropCount, "Invalid ID");
+        require(airdropId >= 0 && airdropId < totalAirdropCount, "Invalid Airdrop ID");
 
         ERC721AirdropObject storage airdrop = airdrops[airdropId];
         IERC721 collection = IERC721(airdrop.collection);

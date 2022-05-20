@@ -169,6 +169,106 @@ describe("Treasury", function() {
     })
 
     describe("Airdrop", () => {
-        
+        it("Should be able to registered by governance only", async () => {
+            await expect(treasury.connect(user1).registerAirdropObject(
+                token.address,  // token address
+                5,  // token id
+                10  // percentage
+            )).to.be.revertedWith("Only governance")
+            // user1, aidropId: 0
+            await treasury.connect(governance).registerAirdropObject(
+                token.address,  // token address
+                5,  // token id
+                10  // percentage
+            )
+
+            await expect(treasury.connect(governance).registerAirdropObject(
+                token.address,  // token address
+                5,  // token id
+                5  // percentage
+            )).to.be.revertedWith("Duplicate airdrop")
+
+            // user2, aidropId: 1
+            await treasury.connect(governance).registerAirdropObject(
+                token.address,  // token address
+                8,  // token id
+                5  // percentage
+            )
+            // user2, aidropId: 2
+            await treasury.connect(governance).registerAirdropObject(
+                token.address,  // token address
+                11,  // token id
+                5  // percentage
+            )
+            // user3, aidropId: 3
+            await treasury.connect(governance).registerAirdropObject(
+                token.address,  // token address
+                17,  // token id
+                10  // percentage
+            )
+
+            await expect(treasury.connect(governance).registerAirdropObject(
+                token.address,  // token address
+                18,  // token id
+                5  // percentage
+            )).to.be.revertedWith("Invalid percentage")
+        })
+
+        it("Should be executed and send value to user wallet", async () => {
+            await expect(
+                treasury.connect(user1).withdrawAirdrop(4)
+            ).to.be.revertedWith("Invalid Airdrop ID")
+            // user staked nft now
+            await expect(
+                treasury.connect(user1).withdrawAirdrop(0)
+            ).to.be.revertedWith("Invalid owner")
+
+            airdropInfo = await treasury.airdrops(2)
+            expect(airdropInfo.withdrawn).to.equal(0)
+            expect(airdropInfo.percentage).to.equal(5)
+            expect(airdropInfo.tokenId).to.equal(11)
+
+            user2OldBalance = await ethers.provider.getBalance(user2.address)
+            await treasury.connect(user2).withdrawAirdrop(2)
+
+            airdropInfo = await treasury.airdrops(2)
+            // 5% of total income
+            expect(airdropInfo.withdrawn).to.equal(ethers.utils.parseEther("266.5"))
+
+            user2NewBalance = await ethers.provider.getBalance(user2.address)
+            expect(user2NewBalance.sub(user2OldBalance)).gt(ethers.utils.parseEther("266.4"))
+            expect(user2NewBalance.sub(user2OldBalance)).lt(ethers.utils.parseEther("266.5"))
+        })
+
+        it("Other user can airdrop after transfer token", async () => {
+            await expect(
+                treasury.connect(user1).withdrawAirdrop(2)
+            ).to.be.revertedWith("Invalid owner")
+            await token.connect(user2).transferFrom(user2.address, user1.address, 11)
+
+            await expect(
+                treasury.connect(user1).withdrawAirdrop(2)
+            ).to.be.revertedWith("Already withdrawn")
+
+
+            await token.connect(user2).mint(1, {
+                value: ethers.utils.parseEther("100")
+            })
+            await token.withdraw()
+
+            // new income arrived to treasury, 30 ether
+            user1OldBalance = await ethers.provider.getBalance(user1.address)
+            await treasury.connect(user1).withdrawAirdrop(2)    // withdraw 5 ether
+            user1NewBalance = await ethers.provider.getBalance(user1.address)
+
+            expect(user1NewBalance.sub(user1OldBalance)).gt(ethers.utils.parseEther("4.9"))
+            expect(user1NewBalance.sub(user1OldBalance)).lt(ethers.utils.parseEther("5"))
+        })
+    })
+
+    describe("Stakers", () => {
+        it("Should be able to get rewards from treasury", async () => {
+            
+        })
     })
 })
