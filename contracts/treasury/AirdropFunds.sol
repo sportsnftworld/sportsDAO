@@ -21,9 +21,6 @@ contract AirdropFunds {
     /// @dev maximum amount of airdrop funds
     uint256 public maximumAmountOfAirdrop;
 
-    /// @dev length of {airdrops}
-    uint256 public totalAirdropCount;
-
     /// @dev Sum of {percentage} of all airdrop objects
     uint256 public totalAirdropPercentages;
 
@@ -42,7 +39,7 @@ contract AirdropFunds {
     function _registerAirdropObject(address _collection, uint256 _tokenId, uint256 _percentage) internal {
         require(_collection != address(0) && _tokenId > 0 && _percentage > 0, "Invalid NFT");
 
-        for (uint256 i = 0; i < totalAirdropCount; i++) {
+        for (uint256 i = 0; i < airdrops.length; i++) {
             ERC721AirdropObject storage _item = airdrops[i];
 
             require(_item.collection != _collection || _item.tokenId != _tokenId, "Duplicate airdrop");
@@ -56,8 +53,6 @@ contract AirdropFunds {
                 withdrawn: 0
             })
         );
-
-        totalAirdropCount ++;
 
         registeredAirdropPercentages += _percentage;
         require(registeredAirdropPercentages <= totalAirdropPercentages, "Invalid percentage");
@@ -81,7 +76,7 @@ contract AirdropFunds {
     /// @dev Check valid token holders, and transfer airdrop amount
     function withdrawAirdrop(uint256 airdropId) external {
         require(totalAmountOfAirdrop > 0, "No fund yet");
-        require(airdropId >= 0 && airdropId < totalAirdropCount, "Invalid Airdrop ID");
+        require(airdropId >= 0 && airdropId < airdrops.length, "Invalid Airdrop ID");
 
         ERC721AirdropObject storage airdrop = airdrops[airdropId];
         IERC721 collection = IERC721(airdrop.collection);
