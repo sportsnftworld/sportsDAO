@@ -29,6 +29,8 @@ contract AirdropFunds {
 
     ERC721AirdropObject[] public airdrops;
 
+    event RegisterAirdropObject(address collection, uint256 tokenId, uint256 percentage);
+
     function _initiailizeAirdrop(uint256 _maxAmount, uint256 _totalAirdropPercentages) internal {
         require(_maxAmount > 0 && _totalAirdropPercentages < 100, "Invalid airdrop conf");
 
@@ -56,6 +58,8 @@ contract AirdropFunds {
 
         registeredAirdropPercentages += _percentage;
         require(registeredAirdropPercentages <= totalAirdropPercentages, "Invalid percentage");
+
+        emit RegisterAirdropObject(_collection, _tokenId, _percentage);
     }
 
     /// @dev whenever deposit funds to airdrop, total amount should not exceed the maximum limit

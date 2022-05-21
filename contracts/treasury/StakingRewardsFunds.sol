@@ -17,6 +17,8 @@ contract StakingRewardsFunds {
 
     StakingRewardsAgreement[] public stakingRewardsHistory;
 
+    event DistributeStakingRewards(uint256 amount);
+
     function _initializeStakingRewards(address _staking) internal {
         require(_staking != address(0), "Invalid staking");
         staking = IStaking(_staking);
@@ -40,6 +42,8 @@ contract StakingRewardsFunds {
                 distributedAt: block.timestamp
             })
         );
+
+        emit DistributeStakingRewards(_actualAmount);
     }
 
     function _depositToStakingRewards(uint256 _amount) internal {

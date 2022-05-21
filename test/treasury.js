@@ -47,6 +47,7 @@ describe("Treasury", function() {
             expect(member2Info[0]).to.equal(ethers.BigNumber.from(20))
             expect(member3Info[0]).to.equal(ethers.BigNumber.from(10))
 
+            // withdrawn amount
             expect(member1Info[1]).to.equal(0)
             expect(member2Info[1]).to.equal(0)
             expect(member3Info[1]).to.equal(0)
@@ -147,6 +148,7 @@ describe("Treasury", function() {
 
             await expect(treasury.withdraw(ethers.utils.parseEther("700"))).to.be.revertedWith("Invalid address")
 
+            // member 1, 20% of total income, 1066
             await treasury.connect(member1).withdraw(ethers.utils.parseEther("700"))
             await expect(treasury.connect(member1).withdraw(ethers.utils.parseEther("367"))).to.be.revertedWith("Too many amount")
             await treasury.connect(member1).withdraw(ethers.utils.parseEther("366"))
@@ -268,7 +270,31 @@ describe("Treasury", function() {
 
     describe("Stakers", () => {
         it("Should be able to get rewards from treasury", async () => {
-            
+            await expect(staking.connect(user1).claimRewards())
+                .to.be.revertedWith("No pending rewards")
+
+            await expect(treasury.distributeStakingRewards(ethers.utils.parseEther('100')))
+                .to.be.revertedWith("Only governance")
+            await treasury.connect(governance).distributeStakingRewards(ethers.utils.parseEther('100'))
+            await treasury.connect(governance).distributeStakingRewards(ethers.utils.parseEther('966'))
+
+            leftAmountOfStakingRewards = await treasury.leftAmountOfStakingRewards()
+            expect(leftAmountOfStakingRewards).to.equal(ethers.utils.parseEther('20'))
+
+            await treasury.connect(governance).distributeStakingRewards(ethers.utils.parseEther('20'))
+            await expect(treasury.connect(governance).distributeStakingRewards(ethers.utils.parseEther('1')))
+                .to.be.revertedWith('No fund yet')
+
+            // total rewards amount: 1086 eth
+            stakingBalance = await ethers.provider.getBalance(staking.address)
+            expect(stakingBalance).to.equal(ethers.utils.parseEther('1086'))
+
+            user1OldBalance = await ethers.provider.getBalance(user1.address)
+            await staking.connect(user1).claimRewards()
+            user1NewBalance = await ethers.provider.getBalance(user1.address)
+
+            expect(user1NewBalance.sub(user1OldBalance)).gt(ethers.utils.parseEther('417.69'))
+            expect(user1NewBalance.sub(user1OldBalance)).lt(ethers.utils.parseEther('417.7'))
         })
     })
 })
