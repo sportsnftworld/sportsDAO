@@ -20,10 +20,10 @@ contract Governance {
     mapping (uint256 => Proposal) public proposals;
 
     /// @dev Min voting weight to execute proposal
-    uint96 public thresholdExec;
+    uint256 public thresholdExec;
 
     /// @dev Total votes required to pass
-    uint96 public quorum;
+    uint256 public quorum;
 
     /// @dev number of senators registered
     uint256 public totalSenators;
@@ -67,6 +67,9 @@ contract Governance {
             isSenators[_senators[i]] = true;
             totalSenators ++;
         }
+
+        quorum = _quorum;
+        thresholdExec = _thresholdExec;
     }
 
     function getTransactionParamsHash(
@@ -108,10 +111,11 @@ contract Governance {
         uint256 proposalID,
         bool yay
     ) external onlySenator {
-        require(proposalID < latestProposalID, "Invalid proposal");
+        require(proposalID > 0 && proposalID <= latestProposalID, "Invalid proposal");
 
         Proposal storage proposal = proposals[proposalID];
         require(!proposal.hasVoted[msg.sender], "Already voted");
+        require(!proposal.executed, "Executed already");
         proposal.hasVoted[msg.sender] = true;
 
         if (yay) {
@@ -129,7 +133,7 @@ contract Governance {
         uint256[] memory values,
         bytes[] memory data
     ) external onlySenator {
-        require(proposalID <= latestProposalID, "Invalid proposal");
+        require(proposalID > 0 && proposalID <= latestProposalID, "Invalid proposal");
 
         Proposal storage proposal = proposals[proposalID];
         require(!proposal.executed, "Executed already");
@@ -141,10 +145,10 @@ contract Governance {
         );
         require(
             transactParamsHash == proposal.transactParamsHash,
-            "Governance: Transact params"
+            "Invalid params"
         );
 
-        require(proposal.yaysCount + proposal.naysCount > quorum, "Not enough votes");
+        require(proposal.yaysCount + proposal.naysCount >= quorum, "Not enough votes");
         require(proposal.yaysCount >= thresholdExec, "Not enough yays");
         proposal.executed = true;
 
@@ -164,12 +168,7 @@ contract Governance {
         require(targetsLength == data.length, "Array length mismatch");
 
         for (uint256 i = 0; i < targetsLength; ++i) {
-            if (data[i].length != 0) {
-                Address.functionCallWithValue(targets[i], data[i], values[i]);
-            } else {
-                /// @dev send ETH to EOA
-                Address.sendValue(payable(targets[i]), values[i]);
-            }
+            Address.functionCallWithValue(targets[i], data[i], values[i]);
         }
     }
 
