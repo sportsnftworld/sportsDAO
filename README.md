@@ -1,8 +1,10 @@
 # Concepts of SportsDAO
 
-It is conceptual repository of brand new `SportsDAO`, firstly introduced to the world with Qatar2022 World Cup, by SportsNFTWorld members.
+It is a conceptual repository of brand new `SportsDAO`, firstly introduced to the world with Qatar2022 World Cup, by SportsNFTWorld members.
 
 `SportsDAO` is a decentralized autonomous organization, mainly focusing on Sports enthusiasts, to collect and distribute rewards.
+
+![SportsDAO](sportsDAO.png)
 
 ## Elements of SportsDAO
 
