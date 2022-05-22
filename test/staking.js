@@ -113,8 +113,11 @@ describe("Staking contract", () => {
             user1ClaimedRewards = user1NewBalance.sub(user1OldBalance)
             user2ClaimedRewards = user2NewBalance.sub(user2OldBalance)
 
-            console.log('pending rewards: ', user1PendingRewards.add(user2PendingRewards).toString())
-            console.log('claimed rewards: ', user1ClaimedRewards.add(user2ClaimedRewards).toString())
+            expect(user1ClaimedRewards).to.gt(ethers.utils.parseEther('11.999'))
+            expect(user1ClaimedRewards).to.lt(ethers.utils.parseEther('12'))
+
+            expect(user2ClaimedRewards).to.gt(ethers.utils.parseEther('23.999'))
+            expect(user2ClaimedRewards).to.lt(ethers.utils.parseEther('24'))
         })
         it("Should be cleared after claimed rewards", async () => {
             user1PendingRewards = await qatar2022MetaClub.getPendingRewards(user1.address)
