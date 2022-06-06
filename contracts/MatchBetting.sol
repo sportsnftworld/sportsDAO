@@ -48,6 +48,9 @@ contract MatchBetting is Ownable {
     /// @dev total amount of betted
     uint256 public totalStakedAmount;
 
+    address public immutable TREASURY;
+    uint256 private withdrawnToTreasury;
+
     /// @dev multiplier of odds rate, to mitigate rounding loss
     uint256 public constant ODDS_MULTIPLIER = 1e5;
 
@@ -62,15 +65,19 @@ contract MatchBetting is Ownable {
         string memory team1_,
         string memory team2_,
         string memory stadium_,
-        uint256 kickOffTime_
+        uint256 kickOffTime_,
+        address _treasury
     ) Ownable() {
         referenceURI = referenceURI_;
 
         team1 = team1_;
         team2 = team2_;
+
         stadium = stadium_;
 
         kickOffTime = kickOffTime_;
+
+        TREASURY = _treasury;
     }
 
     /// @dev stake with anticipated goals of two teams
@@ -177,6 +184,23 @@ contract MatchBetting is Ownable {
         return team1Goals * MAXIMUM_GOALS + team2Goals;
     }
 
+    function getGoalPairInfo(uint256 team1Goals, uint256 team2Goals) external view returns (GoalPair memory) {
+        uint256 goalPair = getGoalId(team1Goals, team2Goals);
+
+        return goalPairsList[goalPair];
+    }
+
+    function setFinalResult(uint256 team1Goals, uint256 team2Goals) external onlyOwner afterFinish {
+        finalResultOfGoalPair = getGoalId(team1Goals, team2Goals);
+    }
+
+    function withdrawToTreasury() external onlyOwner afterFinish {
+        uint256 fee = totalStakedAmount / 10 - withdrawnToTreasury;
+        withdrawnToTreasury = totalStakedAmount / 10;
+
+        (bool success, ) = TREASURY.call{value: fee}("");
+        require(success, "Unable to withdraw");
+    }
 
     modifier beforeKickOff() {
         require(block.timestamp < kickOffTime, "Kicked off");
